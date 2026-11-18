@@ -1,0 +1,71 @@
+{
+  "mean_test_in_train": 0.7859375,
+  "mean_val_in_train": 0.7729166666666666,
+  "trials": [
+    {
+      "seeds": [
+        123,
+        12
+      ],
+      "n_batches_total": 68,
+      "n_train": 1728,
+      "n_val": 192,
+      "n_test": 256,
+      "test_in_train": 0.81640625,
+      "val_in_train": 0.8177083333333334,
+      "test_seen_in_train_or_val": 0.84375
+    },
+    {
+      "seeds": [
+        1,
+        2
+      ],
+      "n_batches_total": 68,
+      "n_train": 1704,
+      "n_val": 192,
+      "n_test": 256,
+      "test_in_train": 0.80859375,
+      "val_in_train": 0.7760416666666666,
+      "test_seen_in_train_or_val": 0.828125
+    },
+    {
+      "seeds": [
+        5,
+        6
+      ],
+      "n_batches_total": 68,
+      "n_train": 1704,
+      "n_val": 192,
+      "n_test": 256,
+      "test_in_train": 0.79296875,
+      "val_in_train": 0.78125,
+      "test_seen_in_train_or_val": 0.80859375
+    },
+    {
+      "seeds": [
+        7,
+        8
+      ],
+      "n_batches_total": 68,
+      "n_train": 1704,
+      "n_val": 192,
+      "n_test": 256,
+      "test_in_train": 0.75,
+      "val_in_train": 0.7916666666666666,
+      "test_seen_in_train_or_val": 0.77734375
+    },
+    {
+      "seeds": [
+        9,
+        10
+      ],
+      "n_batches_total": 68,
+      "n_train": 1704,
+      "n_val": 192,
+      "n_test": 256,
+      "test_in_train": 0.76171875,
+      "val_in_train": 0.6979166666666666,
+      "test_seen_in_train_or_val": 0.8046875
+    }
+  ]
+}

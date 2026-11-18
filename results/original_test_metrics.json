@@ -1,0 +1,6 @@
+{
+ "test_loss": 0.10370063036680222,
+ "test_accuracy": 0.96875,
+ "n_test_batches": 8,
+ "source": "model.evaluate(test_ds) in the original run"
+}
