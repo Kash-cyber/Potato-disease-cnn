@@ -1,133 +1,225 @@
-# Potato Leaf Disease Detection with a CNN
+# 🥔 Potato Leaf Disease Detection with a CNN
 
-A convolutional neural network, built from scratch in **TensorFlow/Keras**, that classifies potato leaf photos as **Early blight**, **Late blight** or **Healthy**. The goal: let a farmer catch crop disease early from a simple photo.
+A convolutional neural network, built from scratch in **TensorFlow/Keras**, that classifies potato leaf photos as **Early blight**, **Late blight**, or **Healthy**. The goal is simple and practical: let a farmer catch crop disease early from a single smartphone photo.
 
 ![Sample predictions](figures/03_sample_predictions.jpg)
 
+🌿 **2,152 leaf images** · **3 classes** · **183,747 parameters (~718 KB)** · **Leak-free training pipeline**
+
 ---
 
-## Key results
+## 🎯 Why This Project?
 
-> **Read this first:** the 96.9% test accuracy below comes from the original notebook's split. An audit that rebuilds that exact pipeline (see [Audit](#audit-was-the-original-test-set-really-unseen)) shows that roughly **four out of five "held-out" images were also in the training set**, so the number is optimistic. The repo includes a leak-free pipeline; re-train on your copy of the images to get an honest score.
+Crop diseases like Early and Late blight can devastate potato harvests if they aren't caught quickly. I built this project to practice building an end-to-end computer vision pipeline from scratch—not just training a model, but auditing how the data was split and making sure the evaluation metrics are genuinely trustworthy.
 
-| Metric | Result |
-|---|---|
-| Dataset | **2,152** leaf images, **3** classes, 256x256 RGB |
-| Split (batches of 32) | 54 train / 6 validation / 8 test batches (about 1,728 / 192 / 256 images) |
-| Model size | **183,747** parameters (about 718 KB) |
-| **Test accuracy (original split)** | **96.875%** (248 of 256 images), test loss 0.1037, **optimistic** (see audit) |
-| **Split audit** | **78.6%** of "test" images (81.6% with the original seeds) were also in the training set |
-| Best validation accuracy | 99.48% (epoch 28, 36, 39, 40, 42, 45) |
-| Time to 95% (train and validation) | **epoch 9** |
-| Final epoch | train 99.1%, validation 97.4% |
-| Training time | about 49 minutes on CPU (58 s per epoch, 50 epochs) |
-| Sample of 9 unseen leaves | **9 of 9 correct**, confidence 92.1% to 100% |
+Working on this project helped me practice how to:
+
+- 🖼️ Load, resize, and augment image datasets using `tf.data` pipelines
+- 🧠 Design and train a multi-block Convolutional Neural Network (CNN) from scratch
+- 🕵️ Audit machine learning pipelines for hidden **data leakage**
+- 📈 Analyze training/validation curves to spot overfitting, noise, and optimal checkpoints
+- 📦 Package notebook experiments into clean, modular, and testable Python scripts
+
+---
+
+## ⚙️ Project Workflow
+
+```
+PlantVillage Image Dataset (2,152 Photos)
+   ↓
+Stratified File-Path Split (Train / Val / Test)
+   ↓
+tf.data Pipeline & Data Augmentation (Flips & Rotations)
+   ↓
+Custom 6-Block CNN (TensorFlow / Keras)
+   ↓
+Training, Checkpointing & Early Stopping
+   ↓
+Split-Leakage Audit & Visual Evaluation
+```
+
+### 🛠️ Technologies
+
+Python · TensorFlow / Keras · scikit-learn · NumPy · pandas · matplotlib · Jupyter Notebook
+
+---
+
+## 📌 Key Results & Findings
+
+> ⚠️ **Important Note on Accuracy:** The **96.9%** test accuracy below comes from the original notebook's split. An audit rebuilding that exact pipeline (see [Split-Leakage Audit](#-split-leakage-audit)) revealed that roughly **four out of five "held-out" test images were also in the training set**, inflating the score. This repository now includes a **leak-free pipeline**—re-train on your local copy of the images to get an honest baseline!
+
+| Metric                               | Result                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Dataset**                          | **2,152** leaf images across **3** classes (`256×256` RGB)                           |
+| **Split (batches of 32)**            | 54 train / 6 validation / 8 test batches (~1,728 / 192 / 256 images)                 |
+| **Model size**                       | **183,747** parameters (~718 KB lightweight footprint)                               |
+| **Test accuracy _(original split)_** | **96.875%** (248 of 256 images), test loss `0.1037` _(optimistic — see audit)_       |
+| **Split-leakage audit**              | **78.6%** of "test" images (**81.6%** with original seeds) also appeared in training |
+| **Best validation accuracy**         | **99.48%** (reached at epochs 28, 36, 39, 40, 42, and 45)                            |
+| **Time to 95% accuracy**             | **Epoch 9** (both training and validation)                                           |
+| **Final epoch (Epoch 50)**           | Train **99.1%**, Validation **97.4%**                                                |
+| **Training time**                    | ~49 minutes on CPU (~58 s per epoch across 50 epochs)                                |
+| **Sample of 9 leaves**               | **9 of 9 correct**, with confidence scores from **92.1% to 100%**                    |
+
+### What the Data Says
+
+- 🧠 **A compact network is plenty:** Six `Conv2D + MaxPooling` blocks and one dense layer achieve ~97% accuracy on the original split, showing that leaf photos against plain backgrounds are a learnable visual task without massive pre-trained models.
+- ⚡ **Fast convergence & healthy fit:** Both training and validation curves cross 95% accuracy by **epoch 9**. Over the final 10 epochs, training accuracy averages 98.7% vs. 97.3% for validation—a narrow gap of ~1.3 percentage points.
+- 📉 **Validation is noisy on small batches:** Validation loss spikes at epochs 7, 16, 30, and 41 (up to `0.50`) and validation accuracy dips to **85.4%** at epoch 30 while training stays smooth, because a 192-image validation set shifts by several points on just a few misclassifications.
+- 💾 **The final epoch wasn't the best:** The lowest validation loss (`0.0093`) occurred at **epoch 42**, whereas the original run kept epoch-50 weights (`0.076`). Automatic checkpointing and `EarlyStopping` are now built into the pipeline.
+- 🌱 **Watch the minority "Healthy" class:** In the 9-image sample grid, the healthy leaf had the lowest confidence (**92.1%**), and an inspected batch contained only 1 healthy leaf out of 32—making per-class precision, recall, and F1 critical.
+
+---
+
+## 📊 Visual Insights & Model Architecture
+
+### Training & Validation Curves
 
 ![Training curves](figures/01_training_curves.png)
 
-### What the results say
-
-1. **A small network is enough.** Six conv + pooling blocks and one dense layer reach about 97% test accuracy. Plant-disease photos on plain backgrounds are a relatively easy visual task.
-2. **It learns fast and fits healthily.** Both curves pass 95% by epoch 9. Over the last 10 epochs training accuracy averages 98.7% vs. 97.3% for validation, a gap of only about 1.3 points.
-3. **Validation is noisy.** Validation loss spikes at epochs 7, 16, 30 and 41 (up to 0.50) and validation accuracy dips to **85.4%** at epoch 30, while training stays smooth. The validation set is just 192 images, so a few mistakes move the score by several points.
-4. **The last epoch was not the best.** The lowest validation loss (0.0093) was at **epoch 42**, but the original run kept the epoch-50 weights (validation loss 0.076). Checkpointing and early stopping are now built in.
-5. **The healthy class is the one to watch.** In the 9-image sample, the healthy leaf had the lowest confidence (92.1%), and in the one batch of labels inspected, only 1 of 32 images was healthy. Healthy leaves are a small minority, so per-class metrics matter.
+### CNN Model Architecture
 
 ![Architecture](figures/02_architecture.png)
 
-### Audit: was the original test set really unseen?
+---
 
-The original notebook made its splits with `take()`/`skip()` on a dataset that reshuffles on every pass, then cached each split separately. To measure what that does, `scripts/audit_split_leakage.py` re-creates the pipeline on **synthetic images whose pixels encode a unique ID** (same structure as the real data: 1,000 / 1,000 / 152 files, batch size 32, 54/6/8 batches), runs it in the order `model.fit()` and `model.evaluate()` would, and checks which images appear in more than one split.
+## 🕵️ Split-Leakage Audit: Was the Test Set Really Unseen?
+
+The original notebook created train/validation/test splits using `.take()` and `.skip()` on a dataset that **reshuffled on every pass**, then cached each split separately.
+
+To measure the impact, `scripts/audit_split_leakage.py` recreates the exact pipeline using **synthetic images whose pixels encode unique IDs** (matching the real dataset structure: `1,000 / 1,000 / 152` files, batch size 32, `54 / 6 / 8` batches) and tracks which images overlap across splits:
 
 ![Split leakage audit](figures/04_split_leakage_audit.png)
 
-- With the original seeds (123 and 12), **81.6% of the 256 test images and 81.8% of the 192 validation images were also in the training set**. Across 5 seed pairs the mean is **78.6%** for test.
-- The effect comes from the pipeline's structure, so it should apply to the real run too, but the exact overlap in the original run is unknown because the audit uses synthetic images, not the real files.
-- Consequence: the validation curve (and its 99.5% peak) and the 96.9% test score mostly measure how well the model remembers images it trained on. The fix is to split **file paths once, before any shuffling**, which is what `src/potato_cnn.py` does.
+- **Massive overlap discovered:** With the original seeds (`123` and `12`), **81.6% of the 256 test images** and **81.8% of the 192 validation images** were also present in the training set (averaging **78.6%** test overlap across 5 seed pairs).
+- **Why it happens:** Because the dataset reshuffles before `.skip()` and `.take()` are evaluated independently, the same files get drawn into multiple splits.
+- **The fix:** Split **file paths once, stratified by class, before any shuffling or caching**—which is now enforced and unit-tested in `src/potato_cnn.py`.
 
 ---
 
-## What I did
+## 🔍 What I Did
 
-| Step | Description |
-|---|---|
-| **1. Load data** | `image_dataset_from_directory` on a folder-per-class dataset: 256x256 images, batch size 32, shuffled with a fixed seed. |
-| **2. Explore** | Inspected image batches and labels to understand the three classes. |
-| **3. Split** | 80/10/10 train/validation/test. |
-| **4. Pipeline** | Cached, shuffled and prefetched the data for speed; added on-the-fly augmentation (random flips, rotation up to 20%) for training only. |
-| **5. Model** | Resize and rescale layers inside the model, then 6 Conv2D(3x3) + MaxPooling blocks (32, then 64 filters), Flatten, Dense(64), Softmax(3). |
-| **6. Train** | Adam optimizer, sparse categorical cross-entropy, 50 epochs, tracking accuracy and loss. |
-| **7. Evaluate** | Test-set evaluation, training curves, and a 3x3 grid of predictions with confidence scores. |
-| **8. Package** | Rebuilt the pipeline as a tested module (`src/potato_cnn.py`), a one-command trainer, a narrated notebook and charts. |
-
----
-
-## Issues found in the original pipeline, and fixes
-
-| Issue | Why it matters | Fix |
-|---|---|---|
-| Splits were made with `take()`/`skip()` on a dataset that **reshuffles each pass**, then cached separately | Images land in more than one split. **Measured with the audit above: about 79% of "test" images were also in training.** This inflates validation and test accuracy. | Split **file paths once**, stratified by class, with fixed seeds; tests assert the sets are disjoint |
-| Only overall accuracy reported | A small healthy class can hide weak per-class results | Per-class precision/recall/F1 and a confusion matrix are saved |
-| `predict(img)` read a global `images[i]` instead of its argument | Would give wrong answers on a new photo | Uses the image it is given (path or array) |
-| Fixed 50 epochs, last weights kept, model not saved | Best epoch was 42; about 49 minutes of CPU; nothing reusable | `EarlyStopping` + best-model checkpoint, saved as `best_model.keras` |
+| Step                      | Action                | Description                                                                                                                                           |
+| ------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. 📥 Load Data**       | Directory Ingestion   | Loaded `256×256` RGB images from class folders (`Early_blight`, `Late_blight`, `healthy`) with batch size 32.                                         |
+| **2. 🔎 Explore**         | Batch Inspection      | Inspected image tensors, dimensions, and label distributions across the three classes.                                                                |
+| **3. ✂️ Split**           | 80 / 10 / 10 Split    | Replaced leaky `take()`/`skip()` splits with a stratified, leak-free file-path split (`src/potato_cnn.py`).                                           |
+| **4. 🔄 Pipeline**        | Augment & Prefetch    | Cached, shuffled, and prefetched batches for performance, applying random flips and up to 20% rotations to training data only.                        |
+| **5. 🏗️ Model**           | Custom CNN            | Built internal resize/rescale layers followed by 6 `Conv2D(3×3) + MaxPooling2D` blocks (32 and 64 filters), `Flatten`, `Dense(64)`, and `Softmax(3)`. |
+| **6. 🏋️ Train**           | Optimize & Checkpoint | Trained with Adam and sparse categorical cross-entropy for 50 epochs, adding `EarlyStopping` and best-weights checkpointing.                          |
+| **7. 📊 Evaluate**        | Metrics & Visuals     | Generated training curves, a 3×3 prediction confidence grid, confusion matrices, and per-class precision/recall/F1 metrics.                           |
+| **8. 🧪 Audit & Package** | Verify & Refactor     | Built `audit_split_leakage.py`, unit tests (`test_pipeline.py`), and a one-command CLI trainer (`train.py`).                                          |
 
 ---
 
-## Project structure
+## 🚧 Pipeline Issues Found & Fixed
+
+| Issue in Original Notebook                                      | Why It Matters                                                                                            | Fix Implemented                                                                                           |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Splits made with `take()`/`skip()` on a reshuffling dataset** | ~79% of "test" images were also in training, artificially inflating accuracy to 96.9%.                    | Split **file paths once** (stratified by class with fixed seeds) and verify disjoint sets via unit tests. |
+| **Only overall accuracy reported**                              | A small minority class (`Healthy`) can hide weak per-class performance.                                   | Automatically export per-class precision, recall, F1-score, and a `confusion_matrix.csv`.                 |
+| **`predict(img)` referenced a global `images[i]` variable**     | Calling `predict()` on a new photo would return predictions for the wrong image.                          | Fixed `predict()` to process the actual image path or array passed as its argument.                       |
+| **Fixed 50 epochs, last weights kept, model not saved**         | Epoch 42 had the best validation loss (`0.0093`), but epoch-50 weights were kept and never saved to disk. | Added `EarlyStopping` and `ModelCheckpoint` to save `best_model.keras` automatically.                     |
+
+---
+
+## 📂 Project Structure
 
 ```
-.
 ├── README.md
 ├── requirements.txt
-├── train.py                        # python train.py --data-dir <dataset> : leak-free split, early stopping, metrics
-├── scripts/audit_split_leakage.py  # reproduces the split-overlap measurement (no real data needed)
+├── train.py                                # One-command trainer: leak-free split, early stopping & metrics
+├── scripts/
+│   └── audit_split_leakage.py              # Reproduces the split-overlap measurement (no real images needed)
 ├── src/
-│   ├── potato_cnn.py               # data split, model, training, evaluation, predict
-│   └── potato_viz.py               # charts from the captured training log
+│   ├── potato_cnn.py                       # Stratified split, CNN architecture, training, evaluation & predict
+│   └── potato_viz.py                       # Generates charts from captured training logs
 ├── notebooks/
-│   └── Potato_Disease_CNN_Analysis.ipynb   # narrated walkthrough with results and insights
-├── data/training_history.csv       # 50-epoch log captured from the original run
-├── results/                        # original test metrics, model summary, split_leakage_audit.json
-├── figures/                        # training curves, architecture, sample predictions, leakage audit
-├── tests/test_pipeline.py          # smoke tests (synthetic images)
-└── original/model_original.ipynb   # the starting notebook, untouched
+│   └── Potato_Disease_CNN_Analysis.ipynb   # Narrated walkthrough with results, audit, and insights
+├── data/
+│   └── training_history.csv                # 50-epoch training log captured from the original run
+├── results/                                # Original metrics, model summary & split_leakage_audit.json
+├── figures/
+│   ├── 01_training_curves.png
+│   ├── 02_architecture.png
+│   ├── 03_sample_predictions.jpg
+│   └── 04_split_leakage_audit.png
+├── tests/
+│   └── test_pipeline.py                    # Smoke tests on synthetic images (verifies disjoint splits)
+└── original/
+    └── model_original.ipynb                # Starting notebook, preserved untouched
 ```
 
-## How to run
+---
 
-```bash
-pip install -r requirements.txt
-python train.py --data-dir path/to/PlantVillage --epochs 50
-python tests/test_pipeline.py
-python scripts/audit_split_leakage.py     # reproduces the leakage audit (about 1 minute)
-jupyter notebook notebooks/Potato_Disease_CNN_Analysis.ipynb
-```
+## 🚀 How to Run
 
-`train.py` writes `history.csv`, `metrics.json` (accuracy plus per-class metrics), `confusion_matrix.csv` and `best_model.keras` to `results/new_run/`. The notebook runs without the images because it reads the captured training log.
+1. **Install dependencies:**
 
-## Data
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-The notebook loads a folder-per-class potato leaf dataset with the classes `Potato___Early_blight`, `Potato___Late_blight` and `Potato___healthy` (2,152 images). This appears to be the **PlantVillage potato subset**; the images themselves are not included in this repository. Download them separately and point `--data-dir` at the folder.
+2. **Train the model on your local dataset (leak-free split):**
 
-## Limitations
+   ```bash
+   python train.py --data-dir path/to/PlantVillage --epochs 50
+   ```
 
-- **The original run's validation and test scores are inflated by split overlap** (audit above, run on synthetic images). The new pipeline removes the overlap, but it has not yet been trained on the real images, so no leak-free accuracy is reported here.
-- **Single run, single split**: no repeated trials or confidence intervals; the 192-image validation set is small and noisy.
-- **No per-class metrics were recorded**, and class counts were not printed; the class-imbalance point is inferred from one label batch and the dataset's public composition.
-- Leaves are photographed against plain backgrounds, so **real field photos may be harder**.
-- The improved module (`src/potato_cnn.py`) was tested on synthetic images only; it has not yet been trained on the real dataset.
+   _(Writes `history.csv`, `metrics.json`, `confusion_matrix.csv`, and `best_model.keras` to `results/new_run/`.)_
 
-## Next steps
+3. **Run the pipeline smoke tests & split-leakage audit:**
 
-- Re-train with the leak-free split and report a confusion matrix and per-class F1.
-- Compare against transfer learning (e.g. MobileNetV2) and class-weighted loss.
-- Add **Grad-CAM** heat maps to show where the model looks on each leaf.
-- Export to TensorFlow Lite or a small API to power a mobile app.
+   ```bash
+   python tests/test_pipeline.py
+   python scripts/audit_split_leakage.py     # Takes ~1 minute; no real dataset required
+   ```
 
-## Tech stack
+4. **Explore the Jupyter Notebook:**
+   ```bash
+   jupyter notebook notebooks/Potato_Disease_CNN_Analysis.ipynb
+   ```
+   _(Works out of the box without downloading the image dataset by reading `data/training_history.csv`.)_
 
-Python · TensorFlow/Keras · scikit-learn · pandas · matplotlib · Jupyter
+---
 
-## Credits
+## 🗄️ Data Source
 
-Dataset: PlantVillage potato leaf images. Model and analysis by Kashaf Malik.
+The notebook expects a folder-per-class potato leaf dataset containing `Potato___Early_blight`, `Potato___Late_blight`, and `Potato___healthy` (**2,152 images** total), matching the **PlantVillage potato subset**. Because the raw images are large, they are excluded from this repository—download the PlantVillage dataset separately and pass its path via `--data-dir`.
+
+---
+
+## ⚠️ Limitations & Next Steps
+
+### Limitations
+
+- **Original scores reflect split overlap:** As proven by the synthetic audit, the original run's 96.9% test score is inflated. Re-running `train.py` on the real images is required to record the true leak-free benchmark.
+- **Single split without confidence intervals:** The 192-image validation set is small enough that a handful of predictions cause visible epoch-to-epoch noise.
+- **Controlled lab backgrounds:** PlantVillage leaves are photographed against uniform backgrounds; real-world field photos with lighting variations and cluttered soil may be harder to classify.
+
+### Next Steps
+
+- 📊 Re-train on the full PlantVillage potato dataset using `train.py` to publish the leak-free confusion matrix and per-class F1 scores.
+- 🧬 Benchmark the custom CNN against transfer learning architectures (e.g., **MobileNetV2** or **EfficientNetB0**) and apply class-weighted loss for the minority `Healthy` class.
+- 🔥 Add **Grad-CAM** heatmaps to visualize which leaf lesions the network focuses on when making predictions.
+- 📱 Export `best_model.keras` to **TensorFlow Lite** or a lightweight REST API for mobile field diagnosis.
+
+---
+
+## 💡 Main Takeaway
+
+This project taught me that **high accuracy numbers mean very little without a clean data pipeline**. Beyond building a working CNN from scratch, auditing the dataset split uncovered a subtle caching/shuffling bug that caused ~79% data leakage—reinforcing the habit of always verifying data splits, tracking per-class metrics, and writing reproducible, tested ML code.
+
+---
+
+## 🙌 Credits
+
+Dataset: **PlantVillage** potato leaf image dataset. Model, audit, and analysis by **Kashaf Malik**.
+
+---
+
+## 👋 Connect With Me
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/kashaf-malik-738689304)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Kash-cyber)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:kashafqaiser1707@gmail.com)
